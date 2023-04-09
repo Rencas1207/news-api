@@ -6,6 +6,8 @@ const NewsContext = createContext();
 export const NewsProvider = ({ children }) => {
    const [category, setCategory] = useState('general');
    const [news, setNews] = useState([]);
+   const [page, setPage] = useState(1);
+   const [totalNews, setTotalNews] = useState(0);
 
    const handleChangeCategory = e => {
       setCategory(e.target.value);
@@ -13,20 +15,44 @@ export const NewsProvider = ({ children }) => {
 
    useEffect(() => {
       const requestApi = async () => {
-         const url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&pageSize=100&apiKey=${import.meta.env.VITE_API_KEY}`
+         const url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${import.meta.env.VITE_API_KEY}`
 
          const { data } = await axios(url);
          setNews(data.articles)
+         setTotalNews(data.totalResults);
+         setPage(1);
       }
       requestApi();
    }, [category])
+
+   useEffect(() => {
+      const requestApi = async () => {
+         const url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&page=${page}&apiKey=${import.meta.env.VITE_API_KEY}`
+
+         const { data } = await axios(url);
+         setNews(data.articles)
+         setTotalNews(data.totalResults);
+      }
+      requestApi();
+   }, [page])
+
+   useEffect(() => {
+      window.scrollTo(0, 0)
+   }, [page, category])
+
+   const handleChangePage = (e, value) => {
+      setPage(value);
+   }
 
    return (
       <NewsContext.Provider
          value={{
             category,
             handleChangeCategory,
-            news
+            news,
+            totalNews,
+            handleChangePage,
+            page
          }}
       >
          {children}
